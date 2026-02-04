@@ -2,8 +2,13 @@
 # This YAML establishes the "build" workflow where we will execute all required scripts
 # During the process, it should get stuck at the last step where it creates a new tunnel on ngrok.
 
-name: Ubuntu
-on: [workflow_dispatch]
+name: Ubuntu 4T
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch: # optional manual trigger
+
 defaults:
   run:
     shell: bash
