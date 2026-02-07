@@ -3,6 +3,9 @@ set -e
 
 echo "🔊 Setting up PulseAudio virtual sink for RustDesk"
 
+# --- Install PulseAudio ---
+sudo apt-get install -y pulseaudio pulseaudio-utils pavucontrol
+
 # --- Ensure runtime dir exists (important in CI/headless) ---
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 mkdir -p "$XDG_RUNTIME_DIR"
