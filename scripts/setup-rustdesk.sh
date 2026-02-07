@@ -7,8 +7,8 @@ if [ "$RUNNER_ARCH" == "ARM64" ]; then
     wget https://github.com/rustdesk/rustdesk/releases/download/1.4.5/rustdesk-1.4.5-aarch64.deb > /dev/null 2>&1
     sudo apt install -fy ./rustdesk-1.4.5-aarch64.deb
 else
-    wget https://github.com/rustdesk/rustdesk/releases/download/1.4.5/rustdesk-1.4.5-amd64.deb > /dev/null 2>&1
-    sudo apt install -fy ./rustdesk-1.4.5-amd64.deb
+    wget https://github.com/rustdesk/rustdesk/releases/download/1.4.5/rustdesk-1.4.5-x86_64.deb > /dev/null 2>&1
+    sudo apt install -fy ./rustdesk-1.4.5-x86_64.deb
 fi
 
 # * Ensure we run RustDesk in the user account (runner) on the VNC display
