@@ -10,13 +10,22 @@ sudo apt install -y xfce4 xfce4-goodies xfonts-base xubuntu-icon-theme xubuntu-w
 # * 2, install TurboVNC
 # Fun Fact: TurboVNC is the only VNC implementations that supports OpenGL acceleration without an graphics device by default
 # By the way, you can still use the legacy version of this script where instead of installing TurboVNC, tightvncserver is installed.
-wget https://phoenixnap.dl.sourceforge.net/project/turbovnc/3.1/turbovnc_3.1_arm64.deb
-sudo dpkg -i turbovnc_3.1_arm64.deb
 
-# * 3, download ngrok
-# wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
-# tar xzf ngrok-v3-stable-linux-amd64.tgz
-# chmod +x ngrok
+if [ "$RUNNER_ARCH" == "ARM64" ]; then
+    wget https://phoenixnap.dl.sourceforge.net/project/turbovnc/3.1/turbovnc_3.1_arm64.deb
+    sudo dpkg -i turbovnc_3.1_arm64.deb
+
+    wget https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz
+    tar xzf ngrok-v3-stable-linux-arm64.tgz
+    chmod +x ngrok
+else
+    wget https://phoenixnap.dl.sourceforge.net/project/turbovnc/3.1/turbovnc_3.1_amd64.deb
+    sudo dpkg -i turbovnc_3.1_amd64.deb
+
+    wget https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+    tar xzf ngrok-v3-stable-linux-amd64.tgz
+    chmod +x ngrok
+fi
 
 # * 4, generate and copy passwd file and xstartup script
 export PATH=$PATH:/opt/TurboVNC/bin
@@ -26,7 +35,7 @@ echo $VNC_PASSWORD | vncpasswd -f > $HOME/.vnc/passwd
 chmod 0600 $HOME/.vnc/passwd
 
 # * 5, set up auth token from argument
-# ./ngrok config add-authtoken $NGROK_AUTH_TOKEN
+./ngrok config add-authtoken $NGROK_AUTH_TOKEN
 
 # * 6, restore firefox profile
 rm -rf ~/.mozilla
