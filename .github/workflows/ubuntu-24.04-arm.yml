@@ -1,0 +1,41 @@
+# Reverse Linux VNC for GitHub Actions
+# This YAML establishes the "build" workflow where we will execute all required scripts
+# During the process, it should get stuck at the last step where it creates a new tunnel on ngrok.
+
+name: Ubuntu ARM
+
+on:
+  workflow_dispatch: # optional manual trigger
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v2
+      - name: Preparing environment...
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+          VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
+        # legacy run command script-- run: ./scripts/configure-legacy.sh
+        run: ./scripts/configure.sh
+
+      - name: Starting VNC Server...
+        env:
+          VNC_SCREENSIZE: ${{ secrets.VNC_SCREENSIZE }}
+          VNC_DEPTHVALUE: ${{ secrets.VNC_DEPTHVALUE }}
+        # legacy run command-- run: cd $HOME && vncserver :1 -geometry $VNC_SCREENSIZE -depth $VNC_DEPTHVALUE -rfbport 7582
+        run: export PATH=$PATH:/opt/TurboVNC/bin && cd $HOME && vncserver :1 -geometry $VNC_SCREENSIZE -depth $VNC_DEPTHVALUE -rfbport 7582
+
+      - name: Setting up Rustdesk
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+          VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: bash scripts/setup-rustdesk.sh
+
+      - name: Waiting for 6 hours for debugging...
+        run: sleep 21600
