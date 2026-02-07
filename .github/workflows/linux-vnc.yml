@@ -6,7 +6,7 @@ name: Ubuntu 4T
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "30 0,6,12,18 * * *"
   workflow_dispatch: # optional manual trigger
 
 defaults:
@@ -23,18 +23,6 @@ jobs:
           VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
         # legacy run command script-- run: ./scripts/configure-legacy.sh
         run: ./scripts/configure.sh
-
-      - name: Start background timer for 5h59m (non-blocking)
-        env:
-          VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        # Start a background process that sleeps for 5h59m (21540s) and then runs the delayed-action script.
-        # Use nohup so it survives the step termination; the job itself remains alive because ngrok is started later.
-        run: |
-          echo "Starting non-blocking background timer for 5h59m (21540 seconds)"
-          chmod +x ./scripts/delayed-action.sh
-          nohup bash -lc 'sleep 21540 && bash "${GITHUB_WORKSPACE}/scripts/delayed-action.sh"' >/dev/null 2>&1 &
 
       - name: Starting VNC Server...
         env:
