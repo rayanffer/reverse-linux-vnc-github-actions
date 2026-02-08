@@ -42,5 +42,8 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: bash scripts/setup-rustdesk.sh
 
-      - name: Start tunnel with ngrok...
-        run: ./ngrok tcp 7582
+      - name: Start services + tunnel
+        run: |
+          bash scripts/setup-user-services.sh &
+          sleep 3
+          ./ngrok tcp 7582

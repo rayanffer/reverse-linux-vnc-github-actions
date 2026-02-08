@@ -19,11 +19,11 @@ if [ "$RUNNER_ARCH" == "ARM64" ]; then
     tar xzf ngrok-v3-stable-linux-arm64.tgz
     chmod +x ngrok
 else
-    wget https://phoenixnap.dl.sourceforge.net/project/turbovnc/3.1/turbovnc_3.1_amd64.deb
+    # wget https://phoenixnap.dl.sourceforge.net/project/turbovnc/3.1/turbovnc_3.1_amd64.deb
     sudo dpkg -i turbovnc_3.1_amd64.deb
 
-    wget https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
-    tar xzf ngrok-v3-stable-linux-amd64.tgz
+    # wget https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+    # tar xzf ngrok-v3-stable-linux-amd64.tgz
     chmod +x ngrok
 fi
 
