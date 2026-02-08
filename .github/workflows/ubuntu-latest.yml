@@ -24,6 +24,9 @@ jobs:
         # legacy run command script-- run: ./scripts/configure-legacy.sh
         run: ./scripts/configure.sh
 
+      - name: Setting up PulseAudio
+        run: bash scripts/setup-pulseaudio.sh
+
       - name: Starting VNC Server...
         env:
           VNC_SCREENSIZE: ${{ secrets.VNC_SCREENSIZE }}

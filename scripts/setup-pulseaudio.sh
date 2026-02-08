@@ -3,59 +3,97 @@ set -e
 
 echo "🔊 Setting up PulseAudio virtual sink for RustDesk"
 
-# --- Install PulseAudio ---
+# --------------------------------------------------
+# Install dependencies
+# --------------------------------------------------
+sudo apt-get update
 sudo apt-get install -y pulseaudio pulseaudio-utils pavucontrol
 
-# --- Ensure runtime dir exists (important in CI/headless) ---
+# --------------------------------------------------
+# Runtime directory (CRITICAL for headless/CI)
+# --------------------------------------------------
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-mkdir -p "$XDG_RUNTIME_DIR"
+sudo mkdir -p "$XDG_RUNTIME_DIR"
+sudo chown "$(id -u)":"$(id -g)" "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
-# --- Kill any stale PulseAudio instance ---
+# --------------------------------------------------
+# Kill stale PulseAudio (run as USER, not root)
+# --------------------------------------------------
 pulseaudio --kill >/dev/null 2>&1 || true
 sleep 1
 
-# --- Start PulseAudio (headless-safe) ---
-pulseaudio --start --daemonize=true --exit-idle-time=-1
+# --------------------------------------------------
+# Start PulseAudio (headless-safe)
+# --------------------------------------------------
+pulseaudio --start --exit-idle-time=-1
 sleep 2
 
-# --- Verify PulseAudio is running ---
+# --------------------------------------------------
+# Verify PulseAudio
+# --------------------------------------------------
 if ! pactl info >/dev/null 2>&1; then
   echo "❌ PulseAudio failed to start"
   exit 1
 fi
 
-echo "✅ PulseAudio started"
+echo "✅ PulseAudio running"
 
-# --- Create virtual sink if it doesn't already exist ---
+# --------------------------------------------------
+# Create virtual sink (idempotent)
+# --------------------------------------------------
 if ! pactl list short sinks | grep -q rustdesk_sink; then
   pactl load-module module-null-sink \
     sink_name=rustdesk_sink \
     sink_properties=device.description=RustDesk_Sink
-  echo "✅ Created virtual sink: rustdesk_sink"
+  echo "✅ Created sink: rustdesk_sink"
 else
-  echo "ℹ️ Virtual sink already exists"
+  echo "ℹ️ Sink already exists"
 fi
 
-# --- Set virtual sink as default ---
+# --------------------------------------------------
+# Set defaults (THIS IS THE IMPORTANT PART)
+# --------------------------------------------------
 pactl set-default-sink rustdesk_sink
+pactl set-default-source rustdesk_sink.monitor
 
-# --- Move any existing audio streams into the sink ---
+# --------------------------------------------------
+# Move existing streams (safe if none exist)
+# --------------------------------------------------
 for stream in $(pactl list short sink-inputs | awk '{print $1}'); do
   pactl move-sink-input "$stream" rustdesk_sink || true
 done
 
-# --- Export env vars RustDesk relies on ---
+for stream in $(pactl list short source-outputs | awk '{print $1}'); do
+  pactl move-source-output "$stream" rustdesk_sink.monitor || true
+done
+
+# --------------------------------------------------
+# Environment variables RustDesk relies on
+# --------------------------------------------------
 export PULSE_SERVER="unix:$XDG_RUNTIME_DIR/pulse/native"
+export PULSE_SOURCE="rustdesk_sink.monitor"
 export SDL_AUDIODRIVER=pulseaudio
 
-# --- Persist env vars for subsequent steps (GitHub Actions compatible) ---
+# --------------------------------------------------
+# Persist env vars (GitHub Actions compatible)
+# --------------------------------------------------
 if [[ -n "$GITHUB_ENV" ]]; then
-  echo "PULSE_SERVER=$PULSE_SERVER" >> "$GITHUB_ENV"
-  echo "SDL_AUDIODRIVER=$SDL_AUDIODRIVER" >> "$GITHUB_ENV"
+  {
+    echo "PULSE_SERVER=$PULSE_SERVER"
+    echo "PULSE_SOURCE=$PULSE_SOURCE"
+    echo "SDL_AUDIODRIVER=$SDL_AUDIODRIVER"
+  } >> "$GITHUB_ENV"
 fi
 
-echo "🎧 PulseAudio routing ready for RustDesk"
-echo "📡 Monitor source: rustdesk_sink.monitor"
+# --------------------------------------------------
+# Final sanity output
+# --------------------------------------------------
+echo "🎧 RustDesk audio routing ready"
+echo "🔈 Sink: rustdesk_sink"
+echo "📡 Source: rustdesk_sink.monitor"
+
+pactl list short sinks
+pactl list short sources
 
 exit 0
